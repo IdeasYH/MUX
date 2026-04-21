@@ -1,0 +1,7 @@
+{
+  "name": "mux",
+  "version": "0.1.0",
+  "entry": "dist/cli/mux.js",
+  "modes": ["hybrid"],
+  "aliases": ["team"]
+}

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.mux/
+.omx/
+.claude/
+__pycache__/
+*.pyc
+npm-debug.log*
+.DS_Store
+
+oh-my-claudecode/
