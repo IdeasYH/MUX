@@ -1,7 +1,7 @@
 {
   "name": "mux",
   "version": "0.1.0",
-  "description": "Minimal hybrid team orchestration extracted from OMC",
+  "description": "Minimal hybrid team orchestration tool",
   "type": "module",
   "bin": {
     "mux": "bin/mux.cjs"
@@ -11,11 +11,11 @@
     "dist",
     "runtime/mux_runtime/**/*.py",
     "plugin",
-    "README.md"
+    "README.md",
+    "README.zh.md"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepare": "npm run build",
     "prepack": "npm run build",
     "test": "vitest run",
     "test:node": "vitest run tests/node",
