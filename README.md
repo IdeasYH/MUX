@@ -22,7 +22,10 @@ MUX/
 
 ### 这是什么
 
-[oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) 是 Claude Code 的多 agent 编排插件，默认安装 38 个 skills，启动时注入大量 system prompt。
+[oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode) 是 Claude Code 的多 agent 编排插件。默认安装后存在两个问题：
+
+1. **启动 token 过多**：38 个 skills + 53 个 MCP 工具全量注入 system prompt，消耗约 14,000+ tokens
+2. **自动介入干扰**：大量 keyword trigger 会在普通对话中意外触发 autopilot、ralph 等重型 workflow
 
 omc-slim 是它的精简版，只保留三个核心能力：
 
@@ -30,7 +33,13 @@ omc-slim 是它的精简版，只保留三个核心能力：
 - `ralph` — 持续执行直到验证完成的循环
 - `ask` — 调用 codex / gemini
 
-CLAUDE.md 注入从 116 行压缩到 34 行，skills 从 38 个减少到 9 个。
+### 精简效果
+
+| 项目 | 原始 | omc-slim | 节省 |
+|------|------|----------|------|
+| CLAUDE.md 注入 | 116 行 | 34 行 | ~82 行 |
+| Skills 数量 | 38 个 | 9 个 | 29 个 |
+| MCP 工具数量 | 53 个 (~9,400 tokens) | 13 个 (~2,000 tokens) | ~7,400 tokens |
 
 ### 安装步骤
 
@@ -51,6 +60,12 @@ chmod +x install.sh
 
 **第三步：重启 Claude Code**
 
+install.sh 自动完成以下操作（全程备份，可回滚）：
+- 替换 CLAUDE.md 为精简版
+- 删除 29 个不需要的 skill 目录
+- patch `bridge/mcp-server.cjs`，支持通过环境变量过滤 MCP 工具
+- 修改 `.mcp.json`，只暴露 13 个必要工具（state、shared_memory、skills 相关）
+
 ### 使用方法
 
 安装后，在 Claude Code 中直接使用：
@@ -59,19 +74,27 @@ chmod +x install.sh
 /oh-my-claudecode:team 3:executor "你的任务描述"
 /oh-my-claudecode:ralph "你的任务描述"
 /oh-my-claudecode:ask
+/oh-my-claudecode:cancel   # 退出 ralph/team 模式
 ```
 
 ### 回滚
 
-安装脚本会自动备份原始文件。如需回滚：
+安装脚本会自动备份所有修改的文件（后缀 `.backup-<时间戳>`）。如需回滚：
 
 ```bash
 OMC_DIR=~/.claude/plugins/cache/omc/oh-my-claudecode/<version>
+
+# 恢复 CLAUDE.md 和 skills
 cp $OMC_DIR/CLAUDE.md.backup-<时间戳> $OMC_DIR/CLAUDE.md
 rm -rf $OMC_DIR/skills
 cp -r $OMC_DIR/skills.backup-<时间戳> $OMC_DIR/skills
+
+# 恢复 MCP 相关文件
+cp $OMC_DIR/bridge/mcp-server.cjs.backup-<时间戳> $OMC_DIR/bridge/mcp-server.cjs
+cp $OMC_DIR/.mcp.json.backup-<时间戳> $OMC_DIR/.mcp.json
 ```
 
 ### 注意
 
-运行 `omc update` 会覆盖 cache，需重新执行 `install.sh`。
+- 运行 `omc update` 会覆盖 cache 目录，需重新执行 `install.sh`
+- 如需临时启用其他 MCP 工具（如 LSP），在 `.mcp.json` 的 `OMC_TOOLS_INCLUDE` 中追加工具名即可
