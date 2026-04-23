@@ -34,37 +34,6 @@ cp -r "$SCRIPT_DIR/skills" "$OMC_DIR/skills"
 
 # 补丁 mcp-server.cjs：注入 OMC_TOOLS_INCLUDE 过滤逻辑
 MCP_SERVER="$OMC_DIR/bridge/mcp-server.cjs"
-OLD_FN='function buildListToolsResponse() {
-  return {
-    tools: allTools.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema2(tool.schema),
-      ...tool.annotations ? { annotations: tool.annotations } : {}
-    }))
-  };
-}'
-NEW_FN='function buildListToolsResponse() {
-  const include = process.env.OMC_TOOLS_INCLUDE
-    ? new Set(process.env.OMC_TOOLS_INCLUDE.split(",").map((s) => s.trim()))
-    : null;
-  const exclude = process.env.OMC_TOOLS_EXCLUDE
-    ? new Set(process.env.OMC_TOOLS_EXCLUDE.split(",").map((s) => s.trim()))
-    : null;
-  const filtered = allTools.filter((tool) => {
-    if (include) return include.has(tool.name);
-    if (exclude) return !exclude.has(tool.name);
-    return true;
-  });
-  return {
-    tools: filtered.map((tool) => ({
-      name: tool.name,
-      description: tool.description,
-      inputSchema: zodToJsonSchema2(tool.schema),
-      ...tool.annotations ? { annotations: tool.annotations } : {}
-    }))
-  };
-}'
 
 if grep -q "OMC_TOOLS_INCLUDE" "$MCP_SERVER" 2>/dev/null; then
   echo "mcp-server.cjs 已包含过滤补丁，跳过。"
