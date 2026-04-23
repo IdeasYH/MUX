@@ -52,6 +52,24 @@ omc-slim 精简为 34 行，只保留 team/ralph/ask 的使用说明和必要工
 
 原始 38 个 skill 目录 → 精简为 9 个。
 
+### MCP 工具过滤（v2 新增）
+
+原始 OMC 在启动时全量注入 53 个 MCP 工具（约 9,400 tokens），包括 LSP、Wiki、Notepad、Python REPL 等大量不需要的工具。
+
+omc-slim v2 通过两处修改将 MCP 工具精简为 13 个（约 2,000 tokens），节省约 7,400 tokens：
+
+1. **`bridge/mcp-server.cjs`**：在 `buildListToolsResponse` 函数中注入环境变量过滤逻辑，支持 `OMC_TOOLS_INCLUDE`（白名单）和 `OMC_TOOLS_EXCLUDE`（黑名单）。
+
+2. **`.mcp.json`**：通过 `env.OMC_TOOLS_INCLUDE` 只暴露以下 13 个工具：
+
+| 工具组 | 工具 | 用途 |
+|--------|------|------|
+| state | `state_read/write/clear/get_status/list_active` | ralph/team 状态管理 |
+| shared_memory | `shared_memory_read/write/list/delete/cleanup` | 跨 agent 通信 |
+| skills | `list_omc_skills/load_omc_skills_local/load_omc_skills_global` | skills 加载 |
+
+如需临时启用其他工具（如 LSP），可在 `.mcp.json` 的 `OMC_TOOLS_INCLUDE` 中追加工具名。
+
 ## 安装方法
 
 ### 前提
@@ -94,5 +112,6 @@ cp -r $OMC_DIR/skills.backup-<时间戳> $OMC_DIR/skills
 ## 注意事项
 
 - 运行 `omc update` 会覆盖 cache 目录，需要重新运行 `install.sh`
-- MCP bridge（`bridge/mcp-server.cjs`）不受影响，team 的 tmux 分屏功能正常
-- 本方案不修改 OMC 的 hooks 和 MCP server，只改 CLAUDE.md 和 skills 目录
+- `install.sh` 会自动备份 `mcp-server.cjs` 和 `.mcp.json`，回滚时一并恢复
+- MCP 工具过滤通过环境变量实现，不影响 team 的 tmux 分屏功能
+- 若 OMC 版本更新导致 `mcp-server.cjs` 中目标函数签名变化，补丁会自动跳过并打印警告
