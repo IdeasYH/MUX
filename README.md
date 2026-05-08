@@ -11,6 +11,12 @@ MUX/
 │   ├── CLAUDE.md                      # 精简后的 OMC 注入内容
 │   ├── skills/                        # 保留的 9 个核心 skill
 │   └── omc极简方案文档（omc-slim版）.md
+├── omx-slim/                          # oh-my-codex 极简安装方案
+│   ├── install.sh                     # 一键安装 slim profile
+│   ├── restore.sh                     # 从备份回滚
+│   ├── AGENTS.md                      # 精简后的 OMX 注入内容
+│   ├── README.md                      # 安装与验收说明
+│   └── 极简OMX复用手册.md              # 给其他 agent 复用的执行手册
 ├── omx极简方案文档.md                  # oh-my-codex 极简方案（参考）
 ├── omx极简方案文档（Claude Code版）.md # OMX → Claude Code 迁移方案（参考）
 └── omx极简使用说明文档.md              # OMX 使用说明（参考）
@@ -98,3 +104,55 @@ cp $OMC_DIR/.mcp.json.backup-<时间戳> $OMC_DIR/.mcp.json
 
 - 运行 `omc update` 会覆盖 cache 目录，需重新执行 `install.sh`
 - 如需临时启用其他 MCP 工具（如 LSP），在 `.mcp.json` 的 `OMC_TOOLS_INCLUDE` 中追加工具名即可
+
+---
+
+## omx-slim：oh-my-codex 极简版
+
+### 这是什么
+
+omx-slim 把 oh-my-codex 从默认常驻编排层改成显式调用的轻量工具层。
+
+保留：
+
+- `$team`
+- `$ralph`
+- `$ask-claude`
+- `$ask-gemini`
+- `$cancel`
+- `$help`
+
+收窄：
+
+- `AGENTS.md` 注入
+- `skills/`
+- `agents/`
+- `prompts/`
+- OMX native hooks
+- 非核心 OMX MCP
+
+### 安装
+
+```bash
+cd MUX/omx-slim
+chmod +x install.sh restore.sh
+./install.sh
+omx doctor
+```
+
+安装后重启 Codex。
+
+### 回滚
+
+```bash
+cd MUX/omx-slim
+./restore.sh
+```
+
+也可以运行：
+
+```bash
+omx setup --force
+```
+
+恢复完整 OMX surface。
